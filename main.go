@@ -24,9 +24,9 @@ const (
 var (
 	// buckets
 	DAILY_BUCKET []byte = []byte("daily_bucket")
-	MAIN_BUCKET  []byte = []byte("main") // main bucket for keeping track of the current day
+	MAIN_BUCKET  []byte = []byte("main")
 
-	// keys
+	// store the current day to keep track when day turns over
 	TODAY_KEY []byte = []byte("today_date")
 )
 
@@ -56,15 +56,14 @@ func main() {
 	db := openDbSession()
 	defer db.Close()
 
-	// start main program loop
 	for {
 		fmt.Println("Updating...")
-		// send http request for json data
+		// get reddit posts from r/all
 		response, err := getPosts("all")
 		if err != nil {
 			log.Println(err.Error())
 		} else {
-			// create RedditPost slice
+			// store posts in RedditPost slice
 			posts, err := convertPosts(response)
 			if err != nil {
 				log.Println(err.Error())
@@ -80,7 +79,7 @@ func main() {
 	}
 }
 
-// start the main database session
+// open database session
 func openDbSession() *bolt.DB {
 	database, err := bolt.Open("reddit.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
@@ -95,7 +94,7 @@ func getTodayBucket() []byte {
 	return []byte(time.Now().Format(DATE_FORMAT))
 }
 
-// returns the post bucket for today
+// returns the post bucket for yesterday
 func getYesterdayBucket() []byte {
 	yesterday := time.Now().AddDate(0, 0, -1)
 	return []byte(yesterday.Format(DATE_FORMAT))
@@ -112,7 +111,7 @@ func checkDateChange(db *bolt.DB) {
 
 		storedDay := b.Get(TODAY_KEY)
 
-		// if the day changes
+		// if day turns over
 		if storedDay == nil || string(getTodayBucket()) != string(storedDay) {
 			// set today's date in database
 			err := b.Put(TODAY_KEY, []byte(getTodayBucket()))
@@ -121,11 +120,11 @@ func checkDateChange(db *bolt.DB) {
 				return err
 			}
 
+			// if no data exists for yesterday
 			if storedDay == nil {
 				storedDay = getTodayBucket()
 			}
 
-			// if there was a previous stored key todayDate - create markdown file
 			fmt.Println("Creating markdown!")
 
 			storedPosts, err := getStoredPosts(db, DAILY_BUCKET, storedDay)
@@ -173,6 +172,11 @@ func writePostsToFile(fileName string, posts []RedditPost) error {
 		file.WriteString(" - [u/" + p.Author + "](http://reddit.com/u/" + p.Author + ") - ")
 		file.WriteString(strconv.Itoa(p.Num_comments) + " Comments - ")
 		file.WriteString("Top position achieved: " + strconv.Itoa(p.TopPosition) + "\n\n")
+
+		// don't post image link if thumbnail doesn't exist
+		if p.Thumbnail == "default" || p.Thumbnail == "self" {
+			continue
+		}
 
 		// don't show thumbnail if NSFW
 		if p.Over_18 {
@@ -250,12 +254,12 @@ func updateDailyPosts(db *bolt.DB, bucket []byte, day []byte, redditPosts []Redd
 					return err
 				}
 
-				// only store the highest score a post receives
+				// only store the highest score a post achieves
 				if storedPost.Score > post.Score {
 					post.Score = storedPost.Score
 				}
 
-				// only store the highest position a post receives
+				// only store the highest position a post achieves
 				if storedPost.TopPosition > index+1 {
 					post.TopPosition = storedPost.TopPosition
 				}
@@ -263,7 +267,7 @@ func updateDailyPosts(db *bolt.DB, bucket []byte, day []byte, redditPosts []Redd
 				fmt.Println("Updating new post: " + post.Title)
 			}
 
-			// serialize json
+			// convert json to string
 			postString, err := json.Marshal(post)
 			if err != nil {
 				return err
@@ -304,7 +308,7 @@ func convertPosts(postString string) ([]RedditPost, error) {
 	return posts, nil
 }
 
-// send http request to reddit and obtain the response string
+// send http request to reddit
 func getPosts(subreddit string) (string, error) {
 	client := &http.Client{}
 
