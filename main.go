@@ -260,7 +260,7 @@ func updateDailyPosts(db *bolt.DB, bucket []byte, day []byte, redditPosts []Redd
 				}
 
 				// only store the highest position a post achieves
-				if storedPost.TopPosition > index+1 {
+				if storedPost.TopPosition < index+1 {
 					post.TopPosition = storedPost.TopPosition
 				}
 			} else {
@@ -333,7 +333,7 @@ func getPosts(subreddit string) (string, error) {
 
 func pushToGithub() error {
 	fmt.Println("Pushing to Github...")
-	commitMessage := "Adding posts for " + string(getTodayBucket())
+	commitMessage := "Adding posts for " + string(getYesterdayBucket())
 
 	out, err := exec.Command("git", "add", ".").Output()
 	if err != nil {
