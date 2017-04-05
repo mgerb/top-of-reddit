@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	REDDIT_URL  string = "https://www.reddit.com/r/"
-	USER_AGENT  string = "top-of-reddit:bot"
-	DATE_FORMAT string = "01-02-2006"
+	REDDIT_URL         string = "https://www.reddit.com/r/"
+	USER_AGENT         string = "top-of-reddit:bot"
+	DATE_FORMAT        string = "01-02-2006"
+	FOLDER_DATE_FORMAT string = "2006-01"
 )
 
 var (
@@ -94,10 +95,19 @@ func getTodayBucket() []byte {
 	return []byte(time.Now().Format(DATE_FORMAT))
 }
 
+// get time object of yesterday
+func getYesterdayTime() time.Time {
+	return time.Now().AddDate(0, 0, -1)
+}
+
 // returns the post bucket for yesterday
 func getYesterdayBucket() []byte {
-	yesterday := time.Now().AddDate(0, 0, -1)
-	return []byte(yesterday.Format(DATE_FORMAT))
+	return []byte(getYesterdayTime().Format(DATE_FORMAT))
+}
+
+// returns date string for folder name
+func getFolderName() string {
+	return getYesterdayTime().Format(FOLDER_DATE_FORMAT)
 }
 
 func checkDateChange(db *bolt.DB) {
@@ -114,7 +124,7 @@ func checkDateChange(db *bolt.DB) {
 		// if day turns over
 		if storedDay == nil || string(getTodayBucket()) != string(storedDay) {
 			// set today's date in database
-			err := b.Put(TODAY_KEY, []byte(getTodayBucket()))
+			err := b.Put(TODAY_KEY, getTodayBucket())
 
 			if err != nil {
 				return err
@@ -157,8 +167,15 @@ func checkDateChange(db *bolt.DB) {
 }
 
 func writePostsToFile(fileName string, posts []RedditPost) error {
+	folderName := getFolderName()
+
+	// create directory if not exists
+	if _, err := os.Stat(folderName); os.IsNotExist(err) {
+		os.Mkdir(folderName, 0700)
+	}
+
 	// create new markdown file
-	file, err := os.Create(fileName + ".md")
+	file, err := os.Create(getFolderName() + "/" + fileName + ".md")
 	defer file.Close()
 
 	if err != nil {
@@ -201,7 +218,6 @@ func getStoredPosts(db *bolt.DB, bucket []byte, day []byte) ([]RedditPost, error
 			tempPost := RedditPost{}
 			err := json.Unmarshal(v, &tempPost)
 			posts = append(posts, tempPost)
-			sort.Sort(ByScore(posts))
 
 			if err != nil {
 				return err
@@ -212,6 +228,9 @@ func getStoredPosts(db *bolt.DB, bucket []byte, day []byte) ([]RedditPost, error
 
 		return nil
 	})
+
+	// sort posts by score
+	sort.Sort(ByScore(posts))
 
 	if err != nil {
 		return []RedditPost{}, err
