@@ -3,8 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/boltdb/bolt"
-	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,13 +11,17 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/boltdb/bolt"
+	"github.com/tidwall/gjson"
 )
 
 const (
-	REDDIT_URL         string = "https://www.reddit.com/r/"
-	USER_AGENT         string = "top-of-reddit:bot"
-	DATE_FORMAT        string = "01-02-2006"
-	FOLDER_DATE_FORMAT string = "2006-01"
+	REDDIT_URL   string = "https://www.reddit.com/r/"
+	USER_AGENT   string = "top-of-reddit:bot"
+	DATE_FORMAT  string = "01-02-2006"
+	YEAR_FORMAT  string = "2006"
+	MONTH_FORMAT string = "01"
 )
 
 var (
@@ -105,9 +107,12 @@ func getYesterdayBucket() []byte {
 	return []byte(getYesterdayTime().Format(DATE_FORMAT))
 }
 
-// returns date string for folder name
-func getFolderName() string {
-	return getYesterdayTime().Format(FOLDER_DATE_FORMAT)
+// returns date string for folder path
+func getFolderPath() string {
+	yesterday := getYesterdayTime()
+	year := yesterday.Format(YEAR_FORMAT)
+	month := yesterday.Format(MONTH_FORMAT)
+	return year + "/" + month
 }
 
 func checkDateChange(db *bolt.DB) {
@@ -167,15 +172,15 @@ func checkDateChange(db *bolt.DB) {
 }
 
 func writePostsToFile(fileName string, posts []RedditPost) error {
-	folderName := getFolderName()
+	folderPath := getFolderPath()
 
 	// create directory if not exists
-	if _, err := os.Stat(folderName); os.IsNotExist(err) {
-		os.Mkdir(folderName, 0700)
+	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
+		os.MkdirAll(folderPath, 0700)
 	}
 
 	// create new markdown file
-	file, err := os.Create(getFolderName() + "/" + fileName + ".md")
+	file, err := os.Create(folderPath + "/" + fileName + ".md")
 	defer file.Close()
 
 	if err != nil {
