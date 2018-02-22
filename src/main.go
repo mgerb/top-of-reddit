@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/mgerb/top-of-reddit/src/model"
 	"github.com/tidwall/gjson"
 )
 
@@ -32,27 +33,6 @@ var (
 	// store the current day to keep track when day turns over
 	TODAY_KEY []byte = []byte("today_date")
 )
-
-type RedditPost struct {
-	Subreddit    string  `json:"subreddit"`
-	ID           string  `json:"id"`
-	Gilded       int     `json:"gilded"`
-	Score        int     `json:"score"`
-	Author       string  `json:"author"`
-	Domain       string  `json:"domain"`
-	Over_18      bool    `json:"over_18"`
-	Thumbnail    string  `json:"thumbnail"`
-	Permalink    string  `json:"permalink"`
-	Url          string  `json:"url"`
-	Title        string  `json:"title"`
-	Created      float64 `json:"created"`
-	Created_utc  float64 `json:"created_utc"`
-	Num_comments int     `json:"num_comments"`
-	Ups          int     `json:"ups"`
-
-	// extra fields
-	TopPosition int // highest achieved position on front page
-}
 
 func main() {
 	// start database connection
@@ -112,7 +92,7 @@ func getFolderPath() string {
 	yesterday := getYesterdayTime()
 	year := yesterday.Format(YEAR_FORMAT)
 	month := yesterday.Format(MONTH_FORMAT)
-	return year + "/" + month
+	return "../" + year + "/" + month
 }
 
 func checkDateChange(db *bolt.DB) {
@@ -171,7 +151,7 @@ func checkDateChange(db *bolt.DB) {
 	}
 }
 
-func writePostsToFile(fileName string, posts []RedditPost) error {
+func writePostsToFile(fileName string, posts []model.RedditPost) error {
 	folderPath := getFolderPath()
 
 	// create directory if not exists
@@ -214,13 +194,13 @@ func writePostsToFile(fileName string, posts []RedditPost) error {
 }
 
 // get a RedditPost slice
-func getStoredPosts(db *bolt.DB, bucket []byte, day []byte) ([]RedditPost, error) {
+func getStoredPosts(db *bolt.DB, bucket []byte, day []byte) ([]model.RedditPost, error) {
 
-	posts := []RedditPost{}
+	posts := []model.RedditPost{}
 
 	err := db.View(func(tx *bolt.Tx) error {
 		tx.Bucket(bucket).Bucket(day).ForEach(func(_, v []byte) error {
-			tempPost := RedditPost{}
+			tempPost := model.RedditPost{}
 			err := json.Unmarshal(v, &tempPost)
 			posts = append(posts, tempPost)
 
@@ -238,14 +218,14 @@ func getStoredPosts(db *bolt.DB, bucket []byte, day []byte) ([]RedditPost, error
 	sort.Sort(ByScore(posts))
 
 	if err != nil {
-		return []RedditPost{}, err
+		return []model.RedditPost{}, err
 	}
 
 	return posts, nil
 }
 
 // stores new posts in the bucket only if they do not exist
-func updateDailyPosts(db *bolt.DB, bucket []byte, day []byte, redditPosts []RedditPost) error {
+func updateDailyPosts(db *bolt.DB, bucket []byte, day []byte, redditPosts []model.RedditPost) error {
 	err := db.Update(func(tx *bolt.Tx) error {
 
 		daily_bucket, err := tx.CreateBucketIfNotExists(bucket)
@@ -272,7 +252,7 @@ func updateDailyPosts(db *bolt.DB, bucket []byte, day []byte, redditPosts []Redd
 
 			// if post is already stored in database - check to update highest score
 			if storedPostString != nil {
-				storedPost := RedditPost{}
+				storedPost := model.RedditPost{}
 				err := json.Unmarshal(storedPostString, &storedPost)
 				if err != nil {
 					return err
@@ -315,11 +295,11 @@ func updateDailyPosts(db *bolt.DB, bucket []byte, day []byte, redditPosts []Redd
 }
 
 // convert reddit response string to RedditPost slice
-func convertPosts(postString string) ([]RedditPost, error) {
-	posts := []RedditPost{}
+func convertPosts(postString string) ([]model.RedditPost, error) {
+	posts := []model.RedditPost{}
 
 	for _, p := range gjson.Get(postString, "data.children").Array() {
-		tempPost := RedditPost{}
+		tempPost := model.RedditPost{}
 
 		err := json.Unmarshal([]byte(p.Get("data").String()), &tempPost)
 		if err != nil {
@@ -381,7 +361,7 @@ func pushToGithub() error {
 }
 
 // sorting
-type ByScore []RedditPost
+type ByScore []model.RedditPost
 
 func (s ByScore) Len() int {
 	return len(s)
