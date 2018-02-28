@@ -339,7 +339,7 @@ func pushToGithub() error {
 	fmt.Println("Pushing to Github...")
 	commitMessage := "Adding posts for " + string(getYesterdayBucket())
 
-	out, err := exec.Command("git", "add", ".").Output()
+	out, err := exec.Command("git", "add", "-A").Output()
 	if err != nil {
 		return err
 	}
