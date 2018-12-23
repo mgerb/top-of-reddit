@@ -138,8 +138,7 @@ func checkDateChange(db *bolt.DB) {
 			err = pushToGithub()
 
 			if err != nil {
-				log.Println("Error pushing")
-				return err
+				log.Println("Error pushing to Github - Continuing")
 			}
 		}
 
