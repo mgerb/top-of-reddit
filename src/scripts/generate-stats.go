@@ -17,12 +17,22 @@ import (
 var conn *bolt.DB
 
 func init() {
-	conn, _ = bolt.Open("../reddit.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
+	conn, _ = bolt.Open("./reddit.db", 0600, &bolt.Options{Timeout: 1 * time.Second})
 }
 
 func main() {
 
-	posts, err := getAllPosts()
+	if len(os.Args) < 2 {
+		log.Fatal("Please specify year argument e.g. go run prog.go 2020")
+	}
+
+	year, err := strconv.Atoi(os.Args[1])
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	posts, err := getAllPosts(year)
 
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +53,7 @@ func main() {
 }
 
 // get posts from database file
-func getAllPosts() ([]model.RedditPost, error) {
+func getAllPosts(year int) ([]model.RedditPost, error) {
 	posts := []model.RedditPost{}
 
 	err := conn.View(func(tx *bolt.Tx) error {
@@ -59,7 +69,13 @@ func getAllPosts() ([]model.RedditPost, error) {
 				if err != nil {
 					return err
 				}
-				posts = append(posts, post)
+
+				postTime := time.Unix(int64(post.Created), 0)
+
+				if postTime.Year() == year {
+					posts = append(posts, post)
+				}
+
 				return nil
 			})
 		})
