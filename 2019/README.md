@@ -1,20 +1,5 @@
-# Top of Reddit
-- Every post that makes it to the front page of [r/all](http://reddit.com/r/all)
-- Updated daily
-- Stored in markdown format [(see first day of 2020 for example)](./2020/01/01-01-2020.md)
-- Sorted by highest score achieved
-- Written in Go
-- [BoltDB](https://github.com/boltdb/bolt) for persistence
-- Uses [word_cloud](https://github.com/amueller/word_cloud) to generate the word cloud
-
-Inspired by [github-trending](https://github.com/josephyzhou/github-trending)
-
-## Archive
-- [Top Subreddits of 2017](./2017/README.md)
-- [Top Subreddits of 2018](./2018/README.md)
-
 # Top Subreddits of 2019
-![2019 word cloud](./2019/wordcloud_2019.png)
+![2019 word cloud](./wordcloud_2019.png)
 
 ## Top Posts of each Subreddit
 |       SUBREDDIT       | TOTAL |                                                                                                                                                                                                          TOP POST                                                                                                                                                                                                           | SCORE  |

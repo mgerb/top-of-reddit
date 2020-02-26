@@ -1,4 +1,4 @@
-wordcloud_cli.py \
+wordcloud_cli \
 --text subreddits.txt \
 --imagefile output.png \
 --color red \
