@@ -1,21 +1,5 @@
-# Top of Reddit
-- Every post that makes it to the front page of [r/all](http://reddit.com/r/all)
-- Updated daily
-- Stored in markdown format [(see first day of 2020 for example)](./2020/01/01-01-2020.md)
-- Sorted by highest score achieved
-- Written in Go
-- [BoltDB](https://github.com/boltdb/bolt) for persistence
-- Uses [word_cloud](https://github.com/amueller/word_cloud) to generate the word cloud
-
-Inspired by [github-trending](https://github.com/josephyzhou/github-trending)
-
-## Archive
-- [Top Subreddits of 2017](./2017/README.md)
-- [Top Subreddits of 2018](./2018/README.md)
-- [Top Subreddits of 2019](./2019/README.md)
-
 # Top Subreddits of 2020
-![2020 word cloud](./2020/wordcloud_2020.png)
+![2020 word cloud](./wordcloud_2020.png)
 
 ## Top Posts of each Subreddit
 |       SUBREDDIT       | TOTAL |                                                                                                                                                                                                        TOP POST                                                                                                                                                                                                         | SCORE  |
@@ -536,7 +520,7 @@ Inspired by [github-trending](https://github.com/josephyzhou/github-trending)
 | AsiansGoneWild        |     1 | [another face pic~ what do ya think?🖤 (back from my hiatus)](https://www.reddit.com/r/AsiansGoneWild/comments/gk3ok9/another_face_pic_what_do_ya_think_back_from_my/)                                                                                                                                                                                                                                                  |  12172 |
 | OutOfTheLoop          |     1 | [What's going on with the the US president allowing US troops to be killed by mercenaries?](https://www.reddit.com/r/OutOfTheLoop/comments/hhhjhv/whats_going_on_with_the_the_us_president_allowing/)                                                                                                                                                                                                                   |  11402 |
 | mountandblade         |     1 | [Mount and Blade II: Bannerlord is now available for purchase](https://www.reddit.com/r/mountandblade/comments/fro22r/mount_and_blade_ii_bannerlord_is_now_available/)                                                                                                                                                                                                                                                  |   7647 |
-| savedyouaclick        |     1 | [This Couple Waited 10 Years Before Opening Their Wedding Present—What They Found Inside Changed Their Lives \| This is a piece of shit article. The wife’s great aunt put wine glasses, an aromatic bath kit, and a couple of notes saying, “Go to dinner” and “Buy flowers.” Suck a dick with this garbage](https://www.reddit.com/r/savedyouaclick/comments/iw4psk/this_couple_waited_10_years_before_opening_their/) |  10090 |
+| savedyouaclick        |     1 | [This Couple Waited 10 Years Before Opening Their Wedding Present—What They Found Inside Changed Their Lives | This is a piece of shit article. The wife’s great aunt put wine glasses, an aromatic bath kit, and a couple of notes saying, “Go to dinner” and “Buy flowers.” Suck a dick with this garbage](https://www.reddit.com/r/savedyouaclick/comments/iw4psk/this_couple_waited_10_years_before_opening_their/) |  10090 |
 | spacex                |     1 | [Crew Dragon has cleared the tower.](https://www.reddit.com/r/spacex/comments/gtkm8y/crew_dragon_has_cleared_the_tower/)                                                                                                                                                                                                                                                                                                |  29146 |
 | india                 |     1 | [I know memes are not allowed here, but really wanted to get my message across](https://www.reddit.com/r/india/comments/k3pybj/i_know_memes_are_not_allowed_here_but_really/)                                                                                                                                                                                                                                           |   8701 |
 | frugalmalefashion     |     1 | [FREE "I Voted" sticker @ your local polling place](https://www.reddit.com/r/frugalmalefashion/comments/jnco5f/free_i_voted_sticker_your_local_polling_place/)                                                                                                                                                                                                                                                          |  26172 |
