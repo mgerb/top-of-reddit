@@ -11,5 +11,5 @@ require (
 require (
 	github.com/mattn/go-runewidth v0.0.2 // indirect
 	github.com/tidwall/match v1.0.0 // indirect
-	golang.org/x/sys v0.0.0-20180224232135-f6cff0780e54 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 )
