@@ -6,9 +6,10 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/mgerb/top-of-reddit/src/model"
+	"github.com/mgerb/top-of-reddit/model"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/boltdb/bolt"
@@ -116,11 +117,12 @@ func writeStatsToFile(posts []model.RedditPost) error {
 	data := [][]string{}
 
 	for _, v := range countList {
-		title := "[" + v[0].Title + "]" + "(https://www.reddit.com" + v[0].Permalink + ")"
+		escapedTitle := strings.ReplaceAll(v[0].Title, "|", "\\|")
+		title := "[" + escapedTitle + "]" + "(https://www.reddit.com" + v[0].Permalink + ")"
 		data = append(data, []string{v[0].Subreddit, strconv.Itoa(len(v)), title, strconv.Itoa(v[0].Score)})
 	}
 
-	file, _ := os.Create("counts.md")
+	file, _ := os.Create("README.md")
 
 	table := tablewriter.NewWriter(file)
 	table.SetAutoWrapText(false)
