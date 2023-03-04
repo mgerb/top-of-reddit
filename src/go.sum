@@ -8,5 +8,5 @@ github.com/tidwall/gjson v1.1.0 h1:/7OBSUzFP8NhuzLlHg0vETJrRL02C++0ql5uSY3DITs=
 github.com/tidwall/gjson v1.1.0/go.mod h1:c/nTNbUr0E0OrXEhq1pwa8iEgc2DOt4ZZqAt1HtCkPA=
 github.com/tidwall/match v1.0.0 h1:Ym1EcFkp+UQ4ptxfWlW+iMdq5cPH5nEuGzdf/Pb7VmI=
 github.com/tidwall/match v1.0.0/go.mod h1:LujAq0jyVjBy028G1WhWfIzbpQfMO8bBZ6Tyb0+pL9E=
-golang.org/x/sys v0.0.0-20180224232135-f6cff0780e54 h1:4qAtdeqGYyXU2CfUvLomEFw0cl5IxNxmEhXL52ODpiU=
-golang.org/x/sys v0.0.0-20180224232135-f6cff0780e54/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.1.0 h1:kunALQeHf1/185U1i0GOB/fy1IPRDDpuoOOqRReG57U=
+golang.org/x/sys v0.1.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
