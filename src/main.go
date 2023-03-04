@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/mgerb/top-of-reddit/src/model"
+	"github.com/mgerb/top-of-reddit/model"
 	"github.com/tidwall/gjson"
 )
 
