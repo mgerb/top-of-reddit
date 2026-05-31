@@ -76,7 +76,7 @@ func main() {
 
 		}
 
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Minute * 5)
 	}
 }
 
@@ -339,7 +339,7 @@ func getPosts(subreddit string) (string, error) {
 		return "", err
 	}
 
-	req, err := http.NewRequest("GET", REDDIT_OAUTH_URL+subreddit+"/hot?limit=100", nil)
+	req, err := http.NewRequest("GET", REDDIT_OAUTH_URL+subreddit+"/hot", nil)
 	if err != nil {
 		return "", err
 	}
