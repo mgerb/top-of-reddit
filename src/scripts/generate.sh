@@ -1,4 +1,7 @@
-# get first argument
+# WARNING: First, copy ../src/reddit.db to this directory. Only execute this
+# from this directory.
+
+# Get first argument.
 if [ -z "$1" ]; then
     echo "Please provide a year e.g. 'generate.sh 2023'"
     exit 1
