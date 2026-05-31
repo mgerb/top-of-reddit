@@ -117,9 +117,13 @@ func writeStatsToFile(posts []model.RedditPost) error {
 	data := [][]string{}
 
 	for _, v := range countList {
-		escapedTitle := strings.ReplaceAll(v[0].Title, "|", "\\|")
-		title := "[" + escapedTitle + "]" + "(https://www.reddit.com" + v[0].Permalink + ")"
-		data = append(data, []string{v[0].Subreddit, strconv.Itoa(len(v)), title, strconv.Itoa(v[0].Score)})
+		title := markdownLink(v[0].Title, "https://www.reddit.com"+v[0].Permalink)
+		data = append(data, []string{
+			markdownTableCell(v[0].Subreddit),
+			strconv.Itoa(len(v)),
+			title,
+			strconv.Itoa(v[0].Score),
+		})
 	}
 
 	file, _ := os.Create("README.md")
@@ -133,6 +137,28 @@ func writeStatsToFile(posts []model.RedditPost) error {
 	table.Render()
 
 	return nil
+}
+
+func markdownLink(text, url string) string {
+	return "[" + markdownLinkText(text) + "](" + url + ")"
+}
+
+func markdownLinkText(text string) string {
+	replacer := strings.NewReplacer(
+		"\\", "\\\\",
+		"|", "\\|",
+		"[", "\\[",
+		"]", "\\]",
+	)
+	return replacer.Replace(normalizeMarkdownText(text))
+}
+
+func markdownTableCell(text string) string {
+	return strings.ReplaceAll(normalizeMarkdownText(text), "|", "\\|")
+}
+
+func normalizeMarkdownText(text string) string {
+	return strings.Join(strings.Fields(text), " ")
 }
 
 func groupBySubreddit(posts []model.RedditPost) map[string][]model.RedditPost {
