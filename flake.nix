@@ -19,6 +19,7 @@
       devShells.default = pkgs.mkShell {
         buildInputs = with pkgs; [
           go
+          gopls
           python313Full
           python313Packages.wordcloud
         ];

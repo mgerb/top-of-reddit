@@ -3,13 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -18,11 +20,12 @@ import (
 )
 
 const (
-	REDDIT_URL   string = "https://www.reddit.com/r/"
-	USER_AGENT   string = "top-of-reddit:bot"
-	DATE_FORMAT  string = "01-02-2006"
-	YEAR_FORMAT  string = "2006"
-	MONTH_FORMAT string = "01"
+	REDDIT_OAUTH_URL string = "https://oauth.reddit.com/r/"
+	REDDIT_TOKEN_URL string = "https://www.reddit.com/api/v1/access_token"
+	USER_AGENT       string = "top-of-reddit:bot"
+	DATE_FORMAT      string = "01-02-2006"
+	YEAR_FORMAT      string = "2006"
+	MONTH_FORMAT     string = "01"
 )
 
 var (
@@ -32,7 +35,22 @@ var (
 
 	// store the current day to keep track when day turns over
 	TODAY_KEY []byte = []byte("today_date")
+
+	redditToken redditAccessToken
 )
+
+type redditAccessToken struct {
+	token     string
+	expiresAt time.Time
+}
+
+type redditTokenResponse struct {
+	AccessToken      string `json:"access_token"`
+	TokenType        string `json:"token_type"`
+	ExpiresIn        int    `json:"expires_in"`
+	Error            string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
 
 func main() {
 	// start database connection
@@ -314,11 +332,20 @@ func convertPosts(postString string) ([]model.RedditPost, error) {
 
 // send http request to reddit
 func getPosts(subreddit string) (string, error) {
-	client := &http.Client{}
+	client := &http.Client{Timeout: 15 * time.Second}
 
-	req, err := http.NewRequest("GET", REDDIT_URL+subreddit+".json", nil)
+	token, err := getRedditAccessToken(client)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest("GET", REDDIT_OAUTH_URL+subreddit+"/hot?limit=100", nil)
+	if err != nil {
+		return "", err
+	}
 
 	req.Header.Add("User-Agent", USER_AGENT)
+	req.Header.Add("Authorization", "bearer "+token)
 
 	response, err := client.Do(req)
 	if err != nil {
@@ -327,12 +354,78 @@ func getPosts(subreddit string) (string, error) {
 
 	defer response.Body.Close()
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
 
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return "", fmt.Errorf("reddit posts request failed: %s: %s", response.Status, strings.TrimSpace(string(body)))
+	}
+
 	return string(body), nil
+}
+
+func getRedditAccessToken(client *http.Client) (string, error) {
+	if redditToken.token != "" && time.Now().Before(redditToken.expiresAt.Add(-1*time.Minute)) {
+		return redditToken.token, nil
+	}
+
+	clientID := os.Getenv("REDDIT_CLIENT_ID")
+	clientSecret := os.Getenv("REDDIT_CLIENT_SECRET")
+	if clientID == "" || clientSecret == "" {
+		return "", fmt.Errorf("missing reddit OAuth credentials: set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET")
+	}
+
+	form := url.Values{}
+	form.Set("grant_type", "client_credentials")
+
+	req, err := http.NewRequest("POST", REDDIT_TOKEN_URL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return "", err
+	}
+
+	req.SetBasicAuth(clientID, clientSecret)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("User-Agent", USER_AGENT)
+
+	response, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return "", fmt.Errorf("reddit token request failed: %s: %s", response.Status, strings.TrimSpace(string(body)))
+	}
+
+	tokenResponse := redditTokenResponse{}
+	if err := json.Unmarshal(body, &tokenResponse); err != nil {
+		return "", err
+	}
+	if tokenResponse.Error != "" {
+		return "", fmt.Errorf("reddit token request failed: %s %s", tokenResponse.Error, tokenResponse.ErrorDescription)
+	}
+	if tokenResponse.AccessToken == "" {
+		return "", fmt.Errorf("reddit token request did not return an access token")
+	}
+
+	expiresIn := tokenResponse.ExpiresIn
+	if expiresIn <= 0 {
+		expiresIn = 3600
+	}
+
+	redditToken = redditAccessToken{
+		token:     tokenResponse.AccessToken,
+		expiresAt: time.Now().Add(time.Duration(expiresIn) * time.Second),
+	}
+
+	return redditToken.token, nil
 }
 
 func pushToGithub() error {

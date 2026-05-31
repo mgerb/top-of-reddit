@@ -1,4 +1,4 @@
 /src/reddit.db
 /reddit.db
 **/*.un~
-
+.env
